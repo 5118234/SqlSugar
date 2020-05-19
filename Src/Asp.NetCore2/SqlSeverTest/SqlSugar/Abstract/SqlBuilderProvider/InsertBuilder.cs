@@ -18,7 +18,7 @@ namespace SqlSugar
         #endregion
 
         #region Common Properties
-        public SqlSugarClient Context { get; set; }
+        public SqlSugarProvider Context { get; set; }
         public ILambdaExpressions LambdaExpressions { get; set; }
         public ISqlBuilder Builder { get; set; }
         public StringBuilder sql { get; set; }
@@ -99,6 +99,14 @@ namespace SqlSugar
         {
             ILambdaExpressions resolveExpress = this.LambdaExpressions;
             this.LambdaExpressions.Clear();
+            if (this.Context.CurrentConnectionConfig.MoreSettings != null)
+            {
+                resolveExpress.PgSqlIsAutoToLower = this.Context.CurrentConnectionConfig.MoreSettings.PgSqlIsAutoToLower;
+            }
+            else
+            {
+                resolveExpress.PgSqlIsAutoToLower = true;
+            }
             resolveExpress.MappingColumns = Context.MappingColumns;
             resolveExpress.MappingTables = Context.MappingTables;
             resolveExpress.IgnoreComumnList = Context.IgnoreColumns;
@@ -126,6 +134,14 @@ namespace SqlSugar
             {
                 StringBuilder batchInsetrSql = new StringBuilder();
                 int pageSize = 200;
+                if (this.EntityInfo.Columns.Count > 30)
+                {
+                    pageSize = 50;
+                }
+                else if (this.EntityInfo.Columns.Count > 20)
+                {
+                    pageSize = 100;
+                }
                 int pageIndex = 1;
                 int totalRecord = groupList.Count;
                 int pageCount = (totalRecord + pageSize - 1) / pageSize;
@@ -157,7 +173,7 @@ namespace SqlSugar
             }
             else
             {
-                var type = value.GetType();
+                var type =UtilMethods.GetUnderType(value.GetType());
                 if (type == UtilConstants.DateType)
                 {
                     var date = value.ObjToDate();

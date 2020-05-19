@@ -15,7 +15,7 @@ namespace SqlSugar
 
         List<JoinQueryInfo> JoinQueryInfos { get; set; }
         bool IsSingle { get; set; }
-        SqlSugarClient Context { get; set; }
+        SqlSugarProvider Context { get; set; }
         IDbMethods DbMehtods { get; set; }
         Expression Expression { get; set; }
         int Index { get; set; }
@@ -26,6 +26,7 @@ namespace SqlSugar
         string SingleTableNameSubqueryShortName { get; set; }
          Action<Type> InitMappingInfo { get; set; }
          Action RefreshMapping { get; set; }
+        bool PgSqlIsAutoToLower { get; set; }
 
         string GetAsString(string fieldName, string fieldValue);
         void Resolve(Expression expression, ResolveExpressType resolveType);

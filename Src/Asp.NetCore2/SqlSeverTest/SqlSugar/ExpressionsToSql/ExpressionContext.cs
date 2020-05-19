@@ -35,12 +35,14 @@ namespace SqlSugar
                 _DbMehtods = value;
             }
         }
+        public int SubQueryIndex { get; set; }
         public int Index { get; set; }
         public int ParameterIndex { get; set; }
         public string SingleTableNameSubqueryShortName{ get;  set; }
         public MappingColumnList MappingColumns { get; set; }
         public MappingTableList MappingTables { get; set; }
         public IgnoreColumnList IgnoreComumnList { get; set; }
+        public bool PgSqlIsAutoToLower { get; set; }
         public List<SqlFuncExternal> SqlFuncServices { get; set; }
         public bool IsSingle
         {
@@ -121,7 +123,10 @@ namespace SqlSugar
         {
             ExpressionContext copyContext = (ExpressionContext)Activator.CreateInstance(this.GetType(), true);
             copyContext.Index = this.Index;
+            copyContext.InitMappingInfo = this.InitMappingInfo;
+            copyContext.RefreshMapping = this.RefreshMapping;
             copyContext.ParameterIndex = this.ParameterIndex;
+            copyContext.PgSqlIsAutoToLower = this.PgSqlIsAutoToLower;
             return copyContext;
         }
         public ExpressionContext GetCopyContextWithMapping()
@@ -133,6 +138,9 @@ namespace SqlSugar
             copyContext.MappingTables = this.MappingTables;
             copyContext.IgnoreComumnList = this.IgnoreComumnList;
             copyContext.SqlFuncServices = this.SqlFuncServices;
+            copyContext.InitMappingInfo = this.InitMappingInfo;
+            copyContext.RefreshMapping = this.RefreshMapping;
+            copyContext.PgSqlIsAutoToLower = this.PgSqlIsAutoToLower;
             return copyContext;
         }
         #endregion
@@ -157,7 +165,15 @@ namespace SqlSugar
             else if (isMapping)
             {
                 var mappingInfo = this.MappingTables.FirstOrDefault(it => it.EntityName.Equals(entityName, StringComparison.CurrentCultureIgnoreCase));
-                return SqlTranslationLeft + (mappingInfo == null ? entityName : mappingInfo.DbTableName) + SqlTranslationRight;
+                var name = (mappingInfo == null ? entityName : mappingInfo.DbTableName);
+                if (name.Contains("."))
+                {
+                    return string.Join(".", name.Split('.').Select(it => SqlTranslationLeft + it + SqlTranslationRight));
+                }
+                else
+                {
+                    return SqlTranslationLeft + name + SqlTranslationRight;
+                }
             }
             else if (isComplex)
             {
